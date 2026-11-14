@@ -9,13 +9,13 @@ Created on Wed Sep  6 15:32:51 2023
 import pinocchio as pin 
 import numpy as np
 from numpy.linalg import pinv,inv,norm,svd,eig
-from tools import collision, getcubeplacement, setcubeplacement, projecttojointlimits, jointlimitsviolated
+from tools import collision, getcubeplacement, setcubeplacement, projecttojointlimits, jointlimitsviolated, distanceToObstacle, distanceFromCubeToObstacle
 from config import LEFT_HOOK, RIGHT_HOOK, LEFT_HAND, RIGHT_HAND, EPSILON
 from config import CUBE_PLACEMENT, CUBE_PLACEMENT_TARGET
 
 from scipy.optimize import fmin_slsqp
 
-DEBUG = False
+DEBUG = True
 
 SOLVER_ACC = 1e-10
 GRASP_THRESHOLD = EPSILON**2
@@ -28,9 +28,9 @@ def computeqgrasppose(robot, qcurrent, cube, cubetarget, viz=None):
     #   print(i, n)
 
     def offset(eff_position, cube_position):
-            handMhook = eff_position.inverse() * cube_position
-            vec = pin.log(handMhook).vector
-            return vec
+        handMhook = eff_position.inverse() * cube_position
+        vec = pin.log(handMhook).vector
+        return vec
 
     def cost(q):
         pin.framesForwardKinematics(robot.model, robot.data, q)
@@ -62,6 +62,15 @@ def computeqgrasppose(robot, qcurrent, cube, cubetarget, viz=None):
         if DEBUG: print("Config results in collision")
         return popt, False
 
+    if distanceToObstacle(robot, popt) < 0.001:
+        if DEBUG: print("Robot too close to wall")
+        return popt, False
+
+    if distanceFromCubeToObstacle(cube, popt) < 0.05:
+        if DEBUG: print("Cube too close to wall")
+        return popt, False
+
+    if DEBUG: print("Successful config")
     return popt, True
             
 if __name__ == "__main__":

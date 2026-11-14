@@ -38,7 +38,7 @@ def distanceToObstacle(robot, q):
       '''Return the shortest distance between robot and the obstacle. '''
       geomidobs = robot.collision_model.getGeometryId('obstaclebase_0')
       geomidtable = robot.collision_model.getGeometryId('baseLink_0')
-      pairs = [i for i, pair in enumerate(robot.collision_model.collisionPairs) if pair.second == geomidobs or pair.second == geomidtable]
+      pairs = [i for i, pair in enumerate(robot.collision_model.collisionPairs) if pair.second == geomidobs]
       pin.framesForwardKinematics(robot.model,robot.data,q)
       pin.updateGeometryPlacements(robot.model,robot.data,robot.collision_model,robot.collision_data,q)
       dists = [pin.computeDistance(robot.collision_model, robot.collision_data, idx).min_distance for idx in pairs]      
@@ -50,6 +50,19 @@ def distanceToObstacle(robot, q):
       # print(min (dists))
       return min(dists)
 
+def distanceFromCubeToObstacle(cube, q):
+      '''Return the shortest distance between robot and the obstacle. '''
+      geomidobs = cube.collision_model.getGeometryId('obstaclebase_0')
+      pairs = [i for i, pair in enumerate(cube.collision_model.collisionPairs) if pair.second == geomidobs]
+      # pin.updateGeometryPlacements(robot.model,robot.data,robot.collision_model,robot.collision_data,q)
+      dists = [pin.computeDistance(cube.collision_model, cube.collision_data, idx).min_distance for idx in pairs]      
+      
+      # pairsId = [pair.first for i, pair in enumerate(robot.collision_model.collisionPairs) if pair.second == geomidobs or pair.second == geomidtable]
+      # names = [robot.collision_model.geometryObjects[idx].name for idx in pairsId ]
+      # for name, dist in zip(names,dists):
+      #     print ("name / distance ", name, " / ", dist)
+      # print(min (dists))
+      return min(dists)
     
 def getcubeplacement(cube, hookname = None):
     oMf = cube.collision_model.geometryObjects[0].placement

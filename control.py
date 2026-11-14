@@ -11,7 +11,7 @@ import pinocchio as pin
 from bezier import Bezier
     
 # in my solution these gains were good enough for all joints but you might want to tune this.
-Kp = 300.               # proportional gain (P of PD)
+Kp = 1000.               # proportional gain (P of PD)
 Kv = 2 * np.sqrt(Kp)   # derivative gain (D of PD)
 
 def controllaw(sim, robot, trajs, tcurrent, cube):
@@ -61,14 +61,14 @@ if __name__ == "__main__":
     #In any case this trajectory does not follow the path 
     #0 init and end velocities
     def maketraj(path,T):
-        qs = [path[0]] + path + [path[-1]]
+        qs = [path[0]] + [path[0]] + path + [path[-1]] + [path[-1]]
         q_of_t = Bezier(qs,t_max=T)
         vq_of_t = q_of_t.derivative(1)
         vvq_of_t = vq_of_t.derivative(1)
         return q_of_t, vq_of_t, vvq_of_t
     
     
-    total_time=8.
+    total_time=20.
     trajs = maketraj(path, total_time)   
     
     tcur = 0.

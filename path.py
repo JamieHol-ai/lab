@@ -17,8 +17,8 @@ from tools import setcubeplacement
 import time
 import math
 
-position_bounds = {"upper": [0.50, 0.20, 1.15, 0., 0., 0.],
-                   "lower": [0.20, -0.40, 0.93, 0., 0., 0.]}
+position_bounds = {"upper": [0.50, 0.20, 1.2, 0., 0., 0.],
+                   "lower": [0.20, -0.40, 0.8, 0., 0., 0.]}
 
 robot, cube = None, None
 
@@ -31,7 +31,7 @@ def setupmodels():
 #the path is expressed as a list of configurations
 def computepath(qinit,qgoal,cubeplacementq0, cubeplacementqgoal):
     setupmodels()
-    k = 500 # max number of samples
+    k = 5000 # max number of samples
     delta = 0.1 # max distance the cube moves per tree extension
     step_size = 0.01 # marching discretisation
     tree = [(None, cubeplacementq0, [qinit])]
