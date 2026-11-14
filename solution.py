@@ -15,3 +15,9 @@ from pinocchio.utils import rotate
 #if needed, you can store the placement of the right hand in the left hand frame here
 LMRREF = pin.SE3(pin.Quaternion(-0,0, 0, 1 ), np.array(np.array([0, 0, 0])))
 RMLREF = LMRREF.inverse()
+
+def getLeftMRight(robot, left_name, right_name):
+    leftMRight = robot.data.oMf[robot.model.getFrameId(left_name)].inverse() * robot.data.oMf[robot.model.getFrameId(right_name)]
+    return leftMRight
+
+
