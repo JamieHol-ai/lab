@@ -7,17 +7,30 @@ Created on Thu Sep 21 11:44:32 2023
 """
 
 import pinocchio as pin
-import numpy as np, random
-from numpy.linalg import pinv, norm
+import numpy as np
+from numpy.linalg import norm
 
-from config import LEFT_HAND, RIGHT_HAND, LEFT_HOOK
+from config import CUBE_PLACEMENT, CUBE_PLACEMENT_TARGET, LEFT_HAND, LEFT_HOOK
+from inverse_geometry import computeqgrasppose
+from setup_pinocchio import setuppinocchio
 from tools import setcubeplacement
 import time
 import math
 
+position_bounds = {"upper": [0.50, 0.20, 1.15, 0., 0., 0.],
+                   "lower": [0.20, -0.40, 0.93, 0., 0., 0.]}
+
+robot, cube = None, None
+
+def setupmodels():
+    global robot, cube
+    if robot is None:
+        robot, _, _, cube = setuppinocchio()
+
 #returns a collision free path from qinit to qgoal under grasping constraints
 #the path is expressed as a list of configurations
 def computepath(qinit,qgoal,cubeplacementq0, cubeplacementqgoal):
+    setupmodels()
     k = 500 # max number of samples
     delta = 0.1 # max distance the cube moves per tree extension
     step_size = 0.01 # marching discretisation
@@ -107,22 +120,17 @@ def displaypath(robot,path,dt,viz):
 
 if __name__ == "__main__":
     from tools import setupwithmeshcat
-    from config import CUBE_PLACEMENT, CUBE_PLACEMENT_TARGET
-    from inverse_geometry import computeqgrasppose
-    
     robot, cube, viz = setupwithmeshcat()
-    
-    
+
     q = robot.q0.copy()
     q0,successinit = computeqgrasppose(robot, q, cube, CUBE_PLACEMENT, viz)
     qe,successend = computeqgrasppose(robot, q, cube, CUBE_PLACEMENT_TARGET,  viz)
-    position_bounds = {"upper": [0.50, 0.20, 1.15, 0., 0., 0.],
-                       "lower": [0.20, -0.40, 0.93, 0., 0., 0.]}
-    
+
     if not(successinit and successend):
         print ("error: invalid initial or end configuration")
-    
+
     path = computepath(q0,qe,CUBE_PLACEMENT, CUBE_PLACEMENT_TARGET)
-    
-    displaypath(robot,path,dt=0.5,viz=viz) #you ll probably want to lower dt
+
+    if path is not None:
+        displaypath(robot,path,dt=0.05,viz=viz)
     

@@ -15,6 +15,11 @@ from config import CUBE_PLACEMENT, CUBE_PLACEMENT_TARGET
 
 from scipy.optimize import fmin_slsqp
 
+DEBUG = False
+
+SOLVER_ACC = 1e-10
+GRASP_THRESHOLD = EPSILON**2
+
 def computeqgrasppose(robot, qcurrent, cube, cubetarget, viz=None):
     '''Return a collision free configuration grasping a cube at a specific location and a success flag'''
     setcubeplacement(robot, cube, cubetarget)
@@ -43,22 +48,20 @@ def computeqgrasppose(robot, qcurrent, cube, cubetarget, viz=None):
 
     joint_limits = list(zip(robot.model.lowerPositionLimit, robot.model.upperPositionLimit))
 
-    popt = fmin_slsqp(cost, qstart, bounds=joint_limits)
-    print(popt)
+    popt = fmin_slsqp(cost, qstart, bounds=joint_limits, acc=SOLVER_ACC, iprint=0)
 
-    if cost(popt) > 1e-3: #TODO: come up with a proper threshold. 
-        print("Cube not graspped")
+    if cost(popt) > GRASP_THRESHOLD:
+        if DEBUG: print("Cube not grasped")
         return popt, False
-    
+
     if jointlimitsviolated(robot, popt):
-        print("Joint limits violated")
+        if DEBUG: print("Joint limits violated")
         return popt, False
 
     if collision(robot, popt):
-        print("Config results in collision") 
+        if DEBUG: print("Config results in collision")
         return popt, False
 
-    print("All good")
     return popt, True
             
 if __name__ == "__main__":
