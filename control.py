@@ -24,7 +24,15 @@ def controllaw(sim, robot, trajs, tcurrent, cube):
     M = pin.crba(robot.model, robot.data, q)
     h = pin.nle(robot.model, robot.data, q, vq)
 
-    torques = M @ acceleration + h
+    W_left = np.array([0,-50,0,0,0,0])
+    left_id = robot.model.getFrameId("LARM_EFF")
+    torque_left = pin.computeFrameJacobian(robot.model, robot.data, q, left_id, pin.ReferenceFrame.LOCAL_WORLD_ALIGNED).transpose() @ W_left
+
+    W_right = np.array([0,50,0,0,0,0])
+    right_id = robot.model.getFrameId("RARM_EFF")
+    torque_right = pin.computeFrameJacobian(robot.model, robot.data, q, right_id, pin.ReferenceFrame.LOCAL_WORLD_ALIGNED).transpose() @ W_right
+    
+    torques = M @ acceleration + h + torque_left + torque_right
 
     sim.step(torques)
 
@@ -60,7 +68,7 @@ if __name__ == "__main__":
         return q_of_t, vq_of_t, vvq_of_t
     
     
-    total_time=4.
+    total_time=8.
     trajs = maketraj(path, total_time)   
     
     tcur = 0.
