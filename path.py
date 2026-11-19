@@ -16,11 +16,15 @@ from setup_pinocchio import setuppinocchio
 from tools import setcubeplacement
 import time
 import math
+from typing import Any
+from hashgrid import Hashgrid
 
 position_bounds = {"upper": [0.50, 0.20, 1.2, 0., 0., 0.],
                    "lower": [0.20, -0.40, 0.8, 0., 0., 0.]}
 
 robot, cube = None, None
+
+DEBUG = False
 
 def setupmodels():
     global robot, cube
@@ -29,28 +33,30 @@ def setupmodels():
 
 #returns a collision free path from qinit to qgoal under grasping constraints
 #the path is expressed as a list of configurations
-def computepath(qinit,qgoal,cubeplacementq0, cubeplacementqgoal):
+def computepath(qinit,qgoal,cubeplacementq0, cubeplacementqgoal, quadsize = 0.1):
     setupmodels()
     k = 5000 # max number of samples
     delta = 0.1 # max distance the cube moves per tree extension
     step_size = 0.01 # marching discretisation
-    tree = [(None, cubeplacementq0, [qinit])]
+    hashgrid: Hashgrid = Hashgrid((None, cubeplacementq0, [qinit]), quadsize)
 
     for step in range(k):
         placement_rand = sample()
-        near_index = nearest_vertex(tree, placement_rand)
-        parent, placement_near, qs_near = tree[near_index]
+        # near_index = nearest_vertex(quadtree.tree, placement_rand)
+        near_index = hashgrid.getNearestNodeTo(placement_rand)
+        parent, placement_near, qs_near = hashgrid[near_index]
         placement_rand = limit_step(placement_near, placement_rand, delta)
         qs, placement_new, _ = marching(qs_near[-1], placement_near, placement_rand, step_size)
         if len(qs) < 2:
             continue # no progress made
-        tree.append((near_index, placement_new, qs))
+        hashgrid.append((near_index, placement_new, qs))
         qs_goal, _, success = marching(qs[-1], placement_new, cubeplacementqgoal, step_size)
         if success:
-            print("Path found!")
-            tree.append((len(tree) - 1, cubeplacementqgoal, qs_goal))
-            return getpath(tree)
-    print("path not found")
+            if DEBUG: print("Path found!")
+            hashgrid.append((len(hashgrid) - 1, cubeplacementqgoal, qs_goal))
+            print(f"Total norms: {hashgrid.total_norms}, number of steps: {step}")
+            return getpath(hashgrid.tree)
+    if DEBUG: print("Path not found")
     return None
 
 def nearest_vertex(tree, placement):

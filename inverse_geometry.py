@@ -15,7 +15,7 @@ from config import CUBE_PLACEMENT, CUBE_PLACEMENT_TARGET
 
 from scipy.optimize import fmin_slsqp
 
-DEBUG = True
+DEBUG = False
 
 SOLVER_ACC = 1e-10
 GRASP_THRESHOLD = EPSILON**2

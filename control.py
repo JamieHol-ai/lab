@@ -9,9 +9,10 @@ Created on Wed Sep  6 15:32:51 2023
 import numpy as np
 import pinocchio as pin
 from bezier import Bezier
-    
+import time
+
 # in my solution these gains were good enough for all joints but you might want to tune this.
-Kp = 1000.               # proportional gain (P of PD)
+Kp = 3000.               # proportional gain (P of PD)
 Kv = 2 * np.sqrt(Kp)   # derivative gain (D of PD)
 
 def controllaw(sim, robot, trajs, tcurrent, cube):
@@ -36,8 +37,7 @@ def controllaw(sim, robot, trajs, tcurrent, cube):
 
     sim.step(torques)
 
-if __name__ == "__main__":
-        
+if __name__ == "__main__":    
     from tools import setupwithpybullet, setupwithpybulletandmeshcat, rununtil
     from config import DT
     
@@ -47,15 +47,24 @@ if __name__ == "__main__":
     from config import CUBE_PLACEMENT, CUBE_PLACEMENT_TARGET    
     from inverse_geometry import computeqgrasppose
     from path import computepath
-    
+
     q0,successinit = computeqgrasppose(robot, robot.q0, cube, CUBE_PLACEMENT, None)
     qe,successend = computeqgrasppose(robot, robot.q0, cube, CUBE_PLACEMENT_TARGET,  None)
-    path = computepath(q0,qe,CUBE_PLACEMENT, CUBE_PLACEMENT_TARGET)
 
+    # Quadtree test
+    if False:
+        quadsizes = [ 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 1 ]
+        for quadsize in quadsizes:
+            np.random.seed(2)
+            start = time.time()
+            path = computepath(q0,qe,CUBE_PLACEMENT, CUBE_PLACEMENT_TARGET, quadsize)
+            end = time.time()
+            print(f"Total time to find path for quadsize {quadsize}: {end - start}s")
+
+    path = computepath(q0,qe,CUBE_PLACEMENT, CUBE_PLACEMENT_TARGET, 0.2)
     
     #setting initial configuration
     sim.setqsim(q0)
-    
     
     #TODO this is just an example, you are free to do as you please.
     #In any case this trajectory does not follow the path 
