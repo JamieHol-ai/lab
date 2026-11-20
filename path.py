@@ -126,7 +126,7 @@ def displaypath(robot,path,dt,viz):
 
 if __name__ == "__main__":
     from tools import setupwithmeshcat
-    robot, cube, viz = setupwithmeshcat()
+    robot, cube, viz = setupwithmeshcat(None) # None passed here to start server automatically
 
     q = robot.q0.copy()
     q0,successinit = computeqgrasppose(robot, q, cube, CUBE_PLACEMENT, viz)

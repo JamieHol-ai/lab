@@ -76,7 +76,7 @@ def computeqgrasppose(robot, qcurrent, cube, cubetarget, viz=None):
 if __name__ == "__main__":
     from tools import setupwithmeshcat
     from setup_meshcat import updatevisuals
-    robot, cube, viz = setupwithmeshcat()
+    robot, cube, viz = setupwithmeshcat(None) # None passed here to start the server automatically
     
     q = robot.q0.copy()
     
