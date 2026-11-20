@@ -1,41 +1,36 @@
-# Other Software Needed
-No other software is required. Provided the files are executed in the aro2026 venv, all neccessary files should run as-is.
-
+Should run as is in the aro2026 venv.
 # Algorithm Descriptions
 
 ## Part 1: Geometry
 ### 1.I
-An high-level description of `computegrasppose` is as follows:
- - Validates starting configuration and computes left/right end effector positions
- - Uses the scipy optimiser `fmin-slsqp` to comptute a configuration for the robot that grasps the cube:
-   - Cost defined as the squared distances of the end-effectors from their targets 
+`computeqgrasppose`:
+ - Validates the starting configuration and computes the end effector positions
+ - Uses scipy's `fmin_slsqp` to find a grasping configuration:
+   - Cost is the squared distance of each end effector from its target
    - Joint limits passed as bounds
- - Extra checks performed to determine success:
-   - Cost of the returned configuration above defined threshold in `config.py`?
-   - Joint limits voilated?
-   - Is the result in-collision with anything?
-   - Is the robot too close to the obstacle?
-   - Is the cube too close to the obstacle?
-   If any are true, the configuration is considered invalid and `False` is returned
+ - The result is invalid (`False` returned) if:
+   - Cost is above the threshold in `config.py`
+   - Joint limits are violated
+   - It is in collision
+   - The robot or cube is too close to the obstacle
 
 ### 1.II
-To generate a path, an RRT approach is used:
- - Sample a cube placement within bounds of the problem area
- - Find nearest node in tree to the sample
- - Restrict sampled to within a set distance of the nearest node
- - Compute reachability by checking along the translation vector using a defined step size and `computegrasppose`
-   - If not, loop back
-   - If yes, this node is added to the tree, and the reachability of the goal is checked. If the goal can be reached, a path can then be computed backwards through the tree.
-If the number of steps taken in the RRT algorithm is above a defined value, it is assumed there is no path and `None` is returned. 
+Paths are generated with RRT:
+ - Sample a cube placement within the problem bounds
+ - Find the nearest tree node and restrict the sample to within a set distance of it
+ - Check reachability along the translation vector in fixed steps using `computeqgrasppose`
+   - If unreachable, resample
+   - If reachable, add the node to the tree and check whether the goal is reachable; if so, the path is traced back through the tree
+If the step limit is exceeded, `None` is returned.
 
 ## Part 2: Dynamics
 ### 2.I Path to Trajectory
-The smooth/interpolate the path to obtain a trajectory, the Bezier library provided is used to compute a trajectory composed of the smoothed path, plus the first and second derivative of that path at the smoothed points.
+The provided Bezier library smooths the path into a trajectory, along with its first and second derivatives.
 
 ### 2.II Control Law
-An inverse dynamics controller tracks the trajectory using PD feedback, and an additional inward force applied at each end effector via $J^T W$ to keep the cube gripped.
+An inverse dynamics controller tracks the trajectory using PD feedback, and an additional inward force applied at each end effector via $J^T W$ keeps the cube gripped.
 
 
 # Extra Points Explanation
- - Level 1 of trajectory optimisation compeleted using Bezier.
- - "Implementing an efficient search for the nearest neighbour in the RRT" completed by implementing a hashgrid rather than looping through every node. (good demo found [here](https://www.redblobgames.com/x/1730-spatial-hash/))
+ - Level 1 of trajectory optimisation completed using Bezier.
+ - "Implementing an efficient search for the nearest neighbour in the RRT" completed by using a hashgrid rather than looping through every node (good demo [here](https://www.redblobgames.com/x/1730-spatial-hash/)).
