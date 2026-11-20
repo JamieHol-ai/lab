@@ -6,29 +6,27 @@ No other software is required. Provided the files are executed in the aro2026 ve
 ## Part 1: Geometry
 ### 1.I
 An high-level description of `computegrasppose` is as follows:
- - Clamps given starting configuration within joint limits
- - Computes left and right end effector position
+ - Validates starting configuration and computes left/right end effector positions
  - Uses the scipy optimiser `fmin-slsqp` to comptute a configuration for the robot that grasps the cube:
-   - Cost function is defined as $$|\text{left\_offset}|^2 + |\text{right\_offset}|^2$$
-     where the left and right offsets are the vectors to the desired target
-   - Joint limits are passed to the optimiser as bounds
- - Finally, some extra checks are performed to determine the success of the function:
-   - Is the cost of the returned configuration above the threshold defined in `config.py`?
-   - Are joint limits voilated?
+   - Cost defined as the squared distances of the end-effectors from their targets 
+   - Joint limits passed as bounds
+ - Extra checks performed to determine success:
+   - Cost of the returned configuration above defined threshold in `config.py`?
+   - Joint limits voilated?
    - Is the result in-collision with anything?
-   - Does the configuration result with the robot too close to the obstacle?
-   - Does the configuration result with the cube being too close to the obstacle?
-   If any of the above are true, the configuration is considered invalid and `False` is returned along with that configuration
+   - Is the robot too close to the obstacle?
+   - Is the cube too close to the obstacle?
+   If any are true, the configuration is considered invalid and `False` is returned
 
 ### 1.II
 To generate a path, an RRT approach is used:
- - Sample a cube placement within set bounds of the problem area
- - Find nearest node in tree to the sampled placement
- - Restrict sampled placement to within a set distance of the nearest node
- - Determine whether this placement can be reached by checking along the translation vector using a defined step size `computegrasppose`
-   - If not, this placement is discarded and the loop begins again
+ - Sample a cube placement within bounds of the problem area
+ - Find nearest node in tree to the sample
+ - Restrict sampled to within a set distance of the nearest node
+ - Compute reachability by checking along the translation vector using a defined step size and `computegrasppose`
+   - If not, loop back
    - If yes, this node is added to the tree, and the reachability of the goal is checked. If the goal can be reached, a path can then be computed backwards through the tree.
-If the number of steps taken in the RRT algorithm is above a defined value, it is assumed a path may not be found and one is not returned. 
+If the number of steps taken in the RRT algorithm is above a defined value, it is assumed there is no path and `None` is returned. 
 
 ## Part 2: Dynamics
 ### 2.I Path to Trajectory
@@ -36,4 +34,7 @@ The smooth/interpolate the path to obtain a trajectory, the Bezier library provi
 
 ### 2.II 
 
+
 # Extra Points Explanation
+ - Level 1 of trajectory optimisation compeleted using Bezier.
+ - "Implementing an efficient search for the nearest neighbour in the RRT" completed by implementing a hashgrid rather than looping through every node. (good demo found [here](https://www.redblobgames.com/x/1730-spatial-hash/))
