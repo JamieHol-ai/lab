@@ -62,7 +62,10 @@ if __name__ == "__main__":
             print(f"Total time to find path for quadsize {quadsize}: {end - start}s")
 
     path = computepath(q0,qe,CUBE_PLACEMENT, CUBE_PLACEMENT_TARGET, 0.2)
-    
+    if path is None:
+        print("Path planning failed, no trajectory to follow")
+        exit()
+
     #setting initial configuration
     sim.setqsim(q0)
     
