@@ -32,7 +32,8 @@ If the number of steps taken in the RRT algorithm is above a defined value, it i
 ### 2.I Path to Trajectory
 The smooth/interpolate the path to obtain a trajectory, the Bezier library provided is used to compute a trajectory composed of the smoothed path, plus the first and second derivative of that path at the smoothed points.
 
-### 2.II 
+### 2.II Control Law
+An inverse dynamics controller tracks the trajectory using PD feedback, and an additional inward force applied at each end effector via $J^T W$ to keep the cube gripped.
 
 
 # Extra Points Explanation

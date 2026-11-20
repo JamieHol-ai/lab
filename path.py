@@ -10,7 +10,7 @@ import pinocchio as pin
 import numpy as np
 from numpy.linalg import norm
 
-from config import CUBE_PLACEMENT, CUBE_PLACEMENT_TARGET, LEFT_HAND, LEFT_HOOK
+from config import CUBE_PLACEMENT, CUBE_PLACEMENT_TARGET, OBSTACLE_PLACEMENT, LEFT_HAND, LEFT_HOOK
 from inverse_geometry import computeqgrasppose
 from setup_pinocchio import setuppinocchio
 from tools import setcubeplacement
@@ -19,8 +19,7 @@ import math
 from typing import Any
 from hashgrid import Hashgrid
 
-position_bounds = {"upper": [0.50, 0.20, 1.2, 0., 0., 0.],
-                   "lower": [0.20, -0.40, 0.8, 0., 0., 0.]}
+BOUNDS_MARGIN = 0.1
 
 robot, cube = None, None
 
@@ -39,9 +38,10 @@ def computepath(qinit,qgoal,cubeplacementq0, cubeplacementqgoal, quadsize = 0.1)
     delta = 0.1 # max distance the cube moves per tree extension
     step_size = 0.01 # marching discretisation
     hashgrid: Hashgrid = Hashgrid((None, cubeplacementq0, [qinit]), quadsize)
+    bounds = computebounds(cubeplacementq0, cubeplacementqgoal)
 
     for step in range(k):
-        placement_rand = sample()
+        placement_rand = sample(bounds)
         # near_index = nearest_vertex(quadtree.tree, placement_rand)
         near_index = hashgrid.getNearestNodeTo(placement_rand)
         parent, placement_near, qs_near = hashgrid[near_index]
@@ -86,8 +86,24 @@ def getpath(tree):
         path += segment
     return path
 
-def sample():
-    target = np.random.uniform(low=position_bounds["lower"], high=position_bounds["upper"])
+def computebounds(cubestart, cubegoal):
+    obstacle_halfsize = robot.collision_model.geometryObjects[robot.collision_model.getGeometryId('obstaclebase_0')].geometry.halfSide
+    obstacle_min = OBSTACLE_PLACEMENT.translation - obstacle_halfsize
+    obstacle_max = OBSTACLE_PLACEMENT.translation + obstacle_halfsize
+    # hooks' distance from the centre is the cube's half-size
+    cube_halfheight = norm(cube.data.oMf[cube.model.getFrameId(LEFT_HOOK)].translation)
+    points = np.array([cubestart.translation, cubegoal.translation, obstacle_min, obstacle_max])
+
+    lower = np.min(points, axis=0) - BOUNDS_MARGIN
+    upper = np.max(points, axis=0) + BOUNDS_MARGIN
+    lower[2] = min(cubestart.translation[2], cubegoal.translation[2])
+    upper[2] = max(cubestart.translation[2], cubegoal.translation[2],
+                   obstacle_max[2] + cube_halfheight) + BOUNDS_MARGIN
+    return {"lower": np.concatenate([lower, np.zeros(3)]),
+            "upper": np.concatenate([upper, np.zeros(3)])}
+
+def sample(bounds):
+    target = np.random.uniform(low=bounds["lower"], high=bounds["upper"])
     target_placement = pin.SE3(pin.rpy.rpyToMatrix(target[3:]), np.array(target[:3]))
     return target_placement
 
