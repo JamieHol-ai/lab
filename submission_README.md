@@ -21,6 +21,19 @@ An high-level description of `computegrasppose` is as follows:
    If any of the above are true, the configuration is considered invalid and `False` is returned along with that configuration
 
 ### 1.II
+To generate a path, an RRT approach is used:
+ - Sample a cube placement within set bounds of the problem area
+ - Find nearest node in tree to the sampled placement
+ - Restrict sampled placement to within a set distance of the nearest node
+ - Determine whether this placement can be reached by checking along the translation vector using a defined step size `computegrasppose`
+   - If not, this placement is discarded and the loop begins again
+   - If yes, this node is added to the tree, and the reachability of the goal is checked. If the goal can be reached, a path can then be computed backwards through the tree.
+If the number of steps taken in the RRT algorithm is above a defined value, it is assumed a path may not be found and one is not returned. 
 
+## Part 2: Dynamics
+### 2.I Path to Trajectory
+The smooth/interpolate the path to obtain a trajectory, the Bezier library provided is used to compute a trajectory composed of the smoothed path, plus the first and second derivative of that path at the smoothed points.
+
+### 2.II 
 
 # Extra Points Explanation

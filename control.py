@@ -66,9 +66,6 @@ if __name__ == "__main__":
     #setting initial configuration
     sim.setqsim(q0)
     
-    #TODO this is just an example, you are free to do as you please.
-    #In any case this trajectory does not follow the path 
-    #0 init and end velocities
     def maketraj(path,T):
         qs = [path[0]] + [path[0]] + path + [path[-1]] + [path[-1]]
         q_of_t = Bezier(qs,t_max=T)
