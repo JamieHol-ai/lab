@@ -1,3 +1,5 @@
+Videos: [path planning (meshcat)](<Path.py demo.webm>), [control (pybullet)](<Control.py demo.webm>)
+
 Should run as is in the aro2026 venv.
 # Algorithm Descriptions
 
